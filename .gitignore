@@ -6,3 +6,5 @@
 # 临时文件
 *.sh.backup
 *.bak
+
+logs/

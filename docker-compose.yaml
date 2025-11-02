@@ -51,6 +51,12 @@ services:
     # uncomment the build: statement and comment out the image: statement
     image: ghcr.io/firecrawl/playwright-service:latest
     # build: apps/playwright-service-ts
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
     environment:
       PORT: 3000
       PROXY_SERVER: ${PROXY_SERVER}
@@ -62,6 +68,12 @@ services:
 
   api:
     <<: *common-service
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
     environment:
       <<: *common-env
       HOST: "0.0.0.0"
@@ -84,7 +96,12 @@ services:
     # Using Valkey with Firecrawl is untested and not guaranteed to work. Use with caution.
     image: redis:alpine
     # image: valkey/valkey:alpine
-
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
     networks:
       - backend
     command: redis-server --bind 0.0.0.0
