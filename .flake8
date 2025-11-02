@@ -1,0 +1,4 @@
+[flake8]
+# 忽略W293：空白行包含空格
+ignore = W293,W291,F541
+max-line-length = 150
