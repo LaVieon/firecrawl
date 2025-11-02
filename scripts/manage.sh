@@ -81,10 +81,74 @@ case "$1" in
         echo "✅ 完成"
         ;;
         
+    test)
+        echo "🧪 测试 Firecrawl 服务..."
+        TEST_URL="${2:-https://mp.weixin.qq.com/s/ejwuAXWc9o2DnCF9nKCNag}"
+        
+        echo "测试 URL: $TEST_URL"
+        echo "正在抓取..."
+        echo ""
+        
+        RESPONSE=$(curl -s -X POST http://localhost:$TARGET_PORT/v2/scrape \
+            -H "Content-Type: application/json" \
+            -d "{\"url\": \"$TEST_URL\", \"formats\": [\"markdown\"]}")
+        
+        if echo "$RESPONSE" | grep -q '"success".*true'; then
+            echo "✅ 测试成功"
+            echo ""
+            
+            # 提取并显示内容
+            mkdir -p "$LOG_DIR"
+            OUTPUT_FILE="$LOG_DIR/test_$(date +%Y%m%d_%H%M%S).md"
+            
+            # 使用 Python 解析 JSON
+            RESULT=$(echo "$RESPONSE" | python3 -c '
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    title = data.get("data", {}).get("metadata", {}).get("title", "无标题")
+    markdown = data.get("data", {}).get("markdown", "")
+    print(f"TITLE:{title}")
+    print(f"CONTENT_LEN:{len(markdown)}")
+    with open("'"$OUTPUT_FILE"'", "w", encoding="utf-8") as f:
+        f.write(markdown)
+    print(markdown[:2000])  # 前2000字符
+except Exception as e:
+    print(f"ERROR:{e}")
+' 2>&1)
+            
+            if echo "$RESULT" | grep -q "^TITLE:"; then
+                TITLE=$(echo "$RESULT" | grep "^TITLE:" | cut -d: -f2-)
+                CONTENT_LEN=$(echo "$RESULT" | grep "^CONTENT_LEN:" | cut -d: -f2)
+                PREVIEW=$(echo "$RESULT" | grep -v "^TITLE:" | grep -v "^CONTENT_LEN:")
+                
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "标题: $TITLE"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo ""
+                echo "内容预览:"
+                echo "$PREVIEW"
+                echo ""
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                echo "内容长度: $CONTENT_LEN 字符"
+                echo "响应长度: $(echo "$RESPONSE" | wc -c) 字节"
+                echo "完整内容已保存到: $OUTPUT_FILE"
+            else
+                echo "解析失败，保存原始响应"
+                echo "$RESPONSE" > "$OUTPUT_FILE.json"
+                echo "原始响应已保存到: $OUTPUT_FILE.json"
+            fi
+        else
+            echo "❌ 测试失败"
+            echo ""
+            echo "$RESPONSE" | head -c 500
+        fi
+        ;;
+        
     *)
         echo "🔥 Firecrawl 服务管理"
         echo ""
-        echo "用法: $0 {start|stop|restart|status|logs|export-logs|clean-logs}"
+        echo "用法: $0 {start|stop|restart|status|logs|export-logs|clean-logs|test}"
         echo ""
         echo "命令:"
         echo "  start        - 启动服务（自动清理端口冲突）"
@@ -94,12 +158,13 @@ case "$1" in
         echo "  logs [容器]  - 查看实时日志（默认: api）"
         echo "  export-logs  - 导出所有日志到文件"
         echo "  clean-logs [天数] - 清理旧日志（默认: 7天）"
+        echo "  test [url]   - 测试服务（默认测试微信文章）"
         echo ""
         echo "示例:"
         echo "  $0 start"
+        echo "  $0 test"
+        echo "  $0 test https://example.com"
         echo "  $0 logs firecrawl-api-1"
-        echo "  $0 export-logs"
-        echo "  $0 clean-logs 3"
         echo ""
         exit 1
         ;;

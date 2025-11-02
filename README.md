@@ -10,6 +10,7 @@
 ./scripts/manage.sh stop        # 停止
 ./scripts/manage.sh restart     # 重启
 ./scripts/manage.sh status      # 查看状态
+./scripts/manage.sh test        # 测试服务（默认测试微信文章）
 
 # 日志管理
 ./scripts/manage.sh logs                    # 查看实时日志
