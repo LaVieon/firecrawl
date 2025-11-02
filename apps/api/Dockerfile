@@ -12,6 +12,9 @@ FROM golang:1.24 AS go-build
 WORKDIR /app
 COPY sharedLibs/go-html-to-md ./sharedLibs/go-html-to-md
 
+# Set Go proxy for China
+ENV GOPROXY=https://goproxy.cn,direct
+
 RUN cd sharedLibs/go-html-to-md && \
     go mod download && \
     go build -o libhtml-to-markdown.so -buildmode=c-shared html-to-markdown.go
