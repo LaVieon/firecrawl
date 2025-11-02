@@ -24,7 +24,7 @@
 - **Schema：** `nuq`
 - **连接方式：** 通过 host.docker.internal 连接到主机的 PostgreSQL
 - **用户名：** postgres
-- **密码：** Xdjf@1234
+- **密码：** ⚠️ 请在 .env 文件中配置（不要提交到 Git）
 
 ## 访问地址
 - API 端点: `http://localhost:3002`
@@ -78,7 +78,7 @@ curl -X POST http://localhost:3002/v1/crawl \
 - 不使用数据库认证 (USE_DB_AUTHENTICATION=false)
 - PostgreSQL 使用简化版初始化脚本 (无 pg_cron 扩展)
 - 使用预构建的 Docker 镜像
-- **数据库连接：** postgres://postgres:Xdjf@1234@host.docker.internal:5432/firecrawl
+- **数据库连接：** 通过环境变量 `NUQ_DATABASE_URL` 配置
 
 ## 注意事项
 1. 使用服务器现有的 PostgreSQL 服务，数据存储在 postgres-postgres-1 容器中
@@ -95,3 +95,32 @@ curl -X POST http://localhost:3002/v1/crawl \
   - 减少容器数量：4个 → 3个
   - 节省资源占用
   - 提升架构规范性
+
+## 🔐 安全配置
+
+### 敏感信息管理
+
+⚠️ **重要**：数据库密码等敏感信息存储在 `.env` 文件中，该文件已添加到 `.gitignore`，不会被提交到 Git。
+
+创建 `.env` 文件并配置：
+
+```bash
+# 复制示例
+cp .env .env.local  # 可选：创建本地副本
+
+# 编辑 .env 文件，配置您的数据库密码
+vim .env
+```
+
+`.env` 文件内容示例：
+
+```bash
+# 数据库连接配置
+NUQ_DATABASE_URL=postgres://postgres:YOUR_ACTUAL_PASSWORD@host.docker.internal:5432/firecrawl
+```
+
+### 首次部署配置
+
+1. 确保 `.env` 文件存在并包含正确的数据库密码
+2. 验证配置：`cat .env | grep NUQ_DATABASE_URL`
+3. 启动服务：`docker compose up -d`
